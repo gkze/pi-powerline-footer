@@ -44,11 +44,44 @@ let userThemeCacheTime = 0;
 const CACHE_TTL = 5000; // 5 seconds
 
 /**
- * Get the path to the theme.json file
+ * Get candidate theme override paths, highest priority first.
+ *
+ * 1) ~/.pi/agent/powerline-footer/theme.json (new global location)
+ * 2) ~/.pi/agent/extensions/powerline-footer/theme.json (documented location)
+ * 3) .pi/extensions/powerline-footer/theme.json (project-local override)
+ * 4) <extension-dir>/theme.json (legacy fallback, next to installed module)
  */
-function getThemePath(): string {
+function getThemePaths(): string[] {
   const extDir = dirname(fileURLToPath(import.meta.url));
-  return join(extDir, "theme.json");
+  const homeDir = process.env.HOME || process.env.USERPROFILE || "";
+  const cwd = process.cwd();
+
+  const paths: string[] = [];
+
+  if (homeDir) {
+    paths.push(join(homeDir, ".pi", "agent", "powerline-footer", "theme.json"));
+    paths.push(join(homeDir, ".pi", "agent", "extensions", "powerline-footer", "theme.json"));
+  }
+
+  // Optional project-level override
+  paths.push(join(cwd, ".pi", "extensions", "powerline-footer", "theme.json"));
+
+  // Legacy/module-local fallback
+  paths.push(join(extDir, "theme.json"));
+
+  return paths;
+}
+
+/**
+ * Resolve first existing theme override path.
+ */
+function getThemePath(): string | null {
+  for (const path of getThemePaths()) {
+    if (existsSync(path)) {
+      return path;
+    }
+  }
+  return null;
 }
 
 /**
@@ -62,7 +95,7 @@ function loadUserTheme(): ColorScheme {
 
   const themePath = getThemePath();
   try {
-    if (existsSync(themePath)) {
+    if (themePath) {
       const content = readFileSync(themePath, "utf-8");
       const parsed = JSON.parse(content);
       userThemeCache = parsed.colors ?? {};

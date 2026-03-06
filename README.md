@@ -151,7 +151,7 @@ Configure via preset options: `path: { mode: "full" }`
 
 ## Theming
 
-Colors are configurable via pi's theme system. Each preset defines its own color scheme, and you can override individual colors with a `theme.json` file in the extension directory.
+Colors are configurable via pi's theme system. Each preset defines its own color scheme, and you can override individual colors with a `theme.json` file.
 
 ### Default Colors
 
