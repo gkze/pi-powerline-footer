@@ -1,10 +1,12 @@
 /**
  * Theme system for powerline-footer
- * 
+ *
  * Colors are resolved in order:
  * 1. User overrides from theme.json (if exists)
  * 2. Preset colors
  * 3. Default colors
+ *
+ * Additional non-color behavior toggles are read from theme.json `options`.
  */
 
 import type { Theme, ThemeColor } from "@mariozechner/pi-coding-agent";
@@ -38,8 +40,18 @@ const RAINBOW_COLORS = [
   "#89d281", "#00afaf", "#178fb9", "#b281d6",
 ];
 
-// Cache for user theme overrides
+interface ThemeOptions {
+  thinkingRainbow: boolean;
+}
+
+const DEFAULT_OPTIONS: ThemeOptions = {
+  // Preserve original extension behavior by default
+  thinkingRainbow: true,
+};
+
+// Cache for user theme overrides and options
 let userThemeCache: ColorScheme | null = null;
+let userOptionsCache: ThemeOptions | null = null;
 let userThemeCacheTime = 0;
 const CACHE_TTL = 5000; // 5 seconds
 
@@ -89,7 +101,7 @@ function getThemePath(): string | null {
  */
 function loadUserTheme(): ColorScheme {
   const now = Date.now();
-  if (userThemeCache && now - userThemeCacheTime < CACHE_TTL) {
+  if (userThemeCache && userOptionsCache && now - userThemeCacheTime < CACHE_TTL) {
     return userThemeCache;
   }
 
@@ -98,7 +110,17 @@ function loadUserTheme(): ColorScheme {
     if (themePath) {
       const content = readFileSync(themePath, "utf-8");
       const parsed = JSON.parse(content);
-      userThemeCache = parsed.colors ?? {};
+
+      const colors = parsed?.colors;
+      userThemeCache = colors && typeof colors === "object" ? colors : {};
+
+      const options = parsed?.options;
+      const thinkingRainbow =
+        options && typeof options === "object" && typeof options.thinkingRainbow === "boolean"
+          ? options.thinkingRainbow
+          : DEFAULT_OPTIONS.thinkingRainbow;
+      userOptionsCache = { thinkingRainbow };
+
       userThemeCacheTime = now;
       return userThemeCache;
     }
@@ -107,6 +129,7 @@ function loadUserTheme(): ColorScheme {
   }
 
   userThemeCache = {};
+  userOptionsCache = { ...DEFAULT_OPTIONS };
   userThemeCacheTime = now;
   return userThemeCache;
 }
@@ -189,6 +212,16 @@ export function rainbow(text: string): string {
 }
 
 /**
+ * Whether high/xhigh thinking should use rainbow styling.
+ * Controlled via theme.json options.thinkingRainbow (default: true).
+ */
+export function isThinkingRainbowEnabled(): boolean {
+  // Ensure options are loaded/cached from theme.json
+  loadUserTheme();
+  return userOptionsCache?.thinkingRainbow ?? DEFAULT_OPTIONS.thinkingRainbow;
+}
+
+/**
  * Get the default color scheme
  */
 export function getDefaultColors(): Required<ColorScheme> {
@@ -200,5 +233,6 @@ export function getDefaultColors(): Required<ColorScheme> {
  */
 export function clearThemeCache(): void {
   userThemeCache = null;
+  userOptionsCache = null;
   userThemeCacheTime = 0;
 }

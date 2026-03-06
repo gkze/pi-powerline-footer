@@ -1,7 +1,7 @@
 import { hostname as osHostname } from "node:os";
 import { basename } from "node:path";
 import type { RenderedSegment, SegmentContext, SemanticColor, StatusLineSegment, StatusLineSegmentId } from "./types.js";
-import { fg, applyColor } from "./theme.js";
+import { fg, applyColor, rainbow, isThinkingRainbowEnabled } from "./theme.js";
 import { getIcons, SEP_DOT, getThinkingText } from "./icons.js";
 
 // Helper to apply semantic color from context
@@ -185,8 +185,11 @@ const thinkingSegment: StatusLineSegment = {
     const label = levelText[level] || level;
     const content = `think:${label}`;
 
-    // Use dedicated high-thinking semantic color for high/xhigh (no rainbow)
+    // For high/xhigh: optional rainbow (default), configurable via theme.json options.thinkingRainbow
     if (level === "high" || level === "xhigh") {
+      if (isThinkingRainbowEnabled()) {
+        return { content: rainbow(content), visible: true };
+      }
       return { content: color(ctx, "thinkingHigh", content), visible: true };
     }
 

@@ -15,5 +15,8 @@
     "tokens": "muted",
     "separator": "dim",
     "border": "borderMuted"
+  },
+  "options": {
+    "thinkingRainbow": true
   }
 }

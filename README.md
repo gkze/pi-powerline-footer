@@ -16,7 +16,7 @@ Customizes the default [pi](https://github.com/badlogic/pi-mono) editor with a p
 
 **Rounded box design** — Status renders directly in the editor's top border, not as a separate footer.
 
-**Live thinking level indicator** — Shows current thinking level (`thinking:off`, `thinking:med`, etc.) with color-coded gradient. High and xhigh levels get a rainbow shimmer effect inspired by Claude Code's ultrathink.
+**Live thinking level indicator** — Shows current thinking level (`thinking:off`, `thinking:med`, etc.) with color-coded gradient. High and xhigh levels use a rainbow shimmer by default (configurable).
 
 **Smart defaults** — Nerd Font auto-detection for iTerm, WezTerm, Kitty, Ghostty, and Alacritty with ASCII fallbacks. Colors matched to oh-my-pi's dark theme.
 
@@ -126,8 +126,18 @@ The thinking segment shows live updates when you change thinking level:
 | minimal | `thinking:min` | purple-gray |
 | low | `thinking:low` | blue |
 | medium | `thinking:med` | teal |
-| high | `thinking:high` | 🌈 rainbow |
-| xhigh | `thinking:xhigh` | 🌈 rainbow |
+| high | `thinking:high` | 🌈 rainbow (default) |
+| xhigh | `thinking:xhigh` | 🌈 rainbow (default) |
+
+To disable rainbow for high/xhigh and use your `thinkingHigh` color instead:
+
+```json
+{
+  "options": {
+    "thinkingRainbow": false
+  }
+}
+```
 
 ## Path Display
 
@@ -171,7 +181,14 @@ Colors are configurable via pi's theme system. Each preset defines its own color
 
 ### Custom Theme Override
 
-Create `~/.pi/agent/extensions/powerline-footer/theme.json`:
+The extension resolves overrides from the first existing file in this order:
+
+1. `~/.pi/agent/powerline-footer/theme.json`
+2. `~/.pi/agent/extensions/powerline-footer/theme.json`
+3. `.pi/extensions/powerline-footer/theme.json` (project-local)
+4. `<extension-dir>/theme.json` (legacy fallback)
+
+Create (recommended) `~/.pi/agent/powerline-footer/theme.json`:
 
 ```json
 {
@@ -180,6 +197,9 @@ Create `~/.pi/agent/extensions/powerline-footer/theme.json`:
     "model": "accent",
     "path": "#00afaf",
     "gitClean": "success"
+  },
+  "options": {
+    "thinkingRainbow": true
   }
 }
 ```
@@ -187,5 +207,8 @@ Create `~/.pi/agent/extensions/powerline-footer/theme.json`:
 Colors can be:
 - **Theme color names**: `accent`, `primary`, `muted`, `dim`, `text`, `success`, `warning`, `error`, `borderMuted`
 - **Hex colors**: `#ff5500`, `#d787af`
+
+Behavior options:
+- `options.thinkingRainbow` (boolean, default `true`) — use rainbow for `thinking:high`/`thinking:xhigh`
 
 See `theme.example.json` for all available options.
